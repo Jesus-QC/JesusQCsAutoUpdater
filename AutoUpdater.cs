@@ -130,7 +130,7 @@ namespace JesusQCsAutoUpdater
                         File.Delete(Path.Combine(Paths.Plugins, plugin.Assembly.GetName().Name + ".dll"));
                         using (var client = new WebClient())
                         {
-                            client.DownloadFile(versionList.Values.FirstOrDefault(), Path.Combine(Paths.Plugins, Path.GetFileName(versionList.Values.FirstOrDefault()) + ".dll"));
+                            client.DownloadFile(versionList.Values.FirstOrDefault(), Path.Combine(Paths.Plugins, Path.GetFileName(versionList.Values.FirstOrDefault())));
                         }
                         Log.Info(plugin.Name + " was updated successfully!");
                         updatedplugins++;
