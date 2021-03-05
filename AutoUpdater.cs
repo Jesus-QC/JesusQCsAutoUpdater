@@ -1,6 +1,7 @@
 ﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Interfaces;
+using Exiled.Loader;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,7 @@ namespace JesusQCsAutoUpdater
         public override string Author { get; } = "JesusQC";
         public override string Prefix { get; } = "jesusqc-autoupdater";
         public override Version RequiredExiledVersion { get; } = new Version(2, 3, 4);
-        public override Version Version { get; } = new Version(1, 0, 1);
+        public override Version Version { get; } = new Version(1, 0, 1, 1);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
         public Dictionary<string, Dictionary<string, string>> pluginList;
@@ -86,7 +87,7 @@ namespace JesusQCsAutoUpdater
         {
             try
             {
-                foreach (IPlugin<IConfig> plugin in Exiled.Loader.Loader.Plugins)
+                foreach (IPlugin<IConfig> plugin in Loader.Plugins)
                 {
                     if (plugin.Name.Contains("Exiled.") || Config.pluginBlacklist.Contains(plugin.Prefix))
                     {
@@ -127,7 +128,7 @@ namespace JesusQCsAutoUpdater
 
                     try
                     {
-                        File.Delete(Path.Combine(Paths.Plugins, plugin.Assembly.GetName().Name + ".dll"));
+                        File.Delete(plugin.GetPath());
                         using (var client = new WebClient())
                         {
                             client.DownloadFile(versionList.Values.FirstOrDefault(), Path.Combine(Paths.Plugins, Path.GetFileName(versionList.Values.FirstOrDefault())));
