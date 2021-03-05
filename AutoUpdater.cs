@@ -16,7 +16,7 @@ namespace JesusQCsAutoUpdater
         public override string Author { get; } = "JesusQC";
         public override string Prefix { get; } = "jesusqc-autoupdater";
         public override Version RequiredExiledVersion { get; } = new Version(2, 3, 4);
-        public override Version Version { get; } = new Version(1, 0, 1, 1);
+        public override Version Version { get; } = new Version(1, 0, 2);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
         public Dictionary<string, Dictionary<string, string>> pluginList;
@@ -131,7 +131,7 @@ namespace JesusQCsAutoUpdater
                         File.Delete(plugin.GetPath());
                         using (var client = new WebClient())
                         {
-                            client.DownloadFile(versionList.Values.FirstOrDefault(), Path.Combine(Paths.Plugins, Path.GetFileName(versionList.Values.FirstOrDefault())));
+                            client.DownloadFile(versionList.Values.FirstOrDefault(), plugin.GetPath());
                         }
                         Log.Info(plugin.Name + " was updated successfully!");
                         updatedplugins++;
