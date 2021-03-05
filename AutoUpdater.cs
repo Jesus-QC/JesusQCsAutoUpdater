@@ -13,9 +13,9 @@ namespace JesusQCsAutoUpdater
     {
         public override string Name { get; } = "JesusQC's AutoUpdater";
         public override string Author { get; } = "JesusQC";
-        public override string Prefix { get; } = "Jesus-autoUpdater";
+        public override string Prefix { get; } = "jesusqc-autoupdater";
         public override Version RequiredExiledVersion { get; } = new Version(2, 3, 4);
-        public override Version Version { get; } = new Version(3, 1, 6);
+        public override Version Version { get; } = new Version(1, 0, 0);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
         public Dictionary<string, Dictionary<string, string>> pluginList;
@@ -46,6 +46,27 @@ namespace JesusQCsAutoUpdater
         public override void OnDisabled()
         {
             base.OnDisabled();
+        }
+
+        public override void OnReloaded()
+        {
+            shouldSendDebug = Config.IsDebugEnabled;
+            updatedplugins = 0;
+
+            GetPluginListURL();
+
+            MEC.Timing.CallDelayed(3, () =>
+            {
+                Log.Info
+                (@"
+                    ___
+                   |[_]|  JesusQC's AutoUpdater
+                   |+ ;|  Searching for updates...
+                   `---'");
+                CheckForUpdates();
+            });
+
+            base.OnReloaded();
         }
 
         public void GetPluginListURL()
