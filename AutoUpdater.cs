@@ -49,27 +49,6 @@ namespace JesusQCsAutoUpdater
             base.OnDisabled();
         }
 
-        public override void OnReloaded()
-        {
-            shouldSendDebug = Config.IsDebugEnabled;
-            updatedplugins = 0;
-
-            GetPluginListURL();
-
-            MEC.Timing.CallDelayed(3, () =>
-            {
-                Log.Info
-                (@"
-                    ___
-                   |[_]|  JesusQC's AutoUpdater
-                   |+ ;|  Searching for updates...
-                   `---'");
-                CheckForUpdates();
-            });
-
-            base.OnReloaded();
-        }
-
         public void GetPluginListURL()
         {
             const string url = "https://jesus-qc.es/autoupdaterapi.json";
@@ -151,7 +130,6 @@ namespace JesusQCsAutoUpdater
                     Log.Debug(plugin.Name + " " + plugin.Version + " is updated", shouldSendDebug);
                     updatedplugins++;
                 }
-                AllPluginsUpdated();
             }
             catch(Exception e)
             {
