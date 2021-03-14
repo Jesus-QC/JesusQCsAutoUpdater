@@ -4,10 +4,8 @@ using Exiled.API.Interfaces;
 using Exiled.Loader;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security;
 
 namespace JesusQCsAutoUpdater
 {
@@ -17,7 +15,7 @@ namespace JesusQCsAutoUpdater
         public override string Author { get; } = "JesusQC";
         public override string Prefix { get; } = "jesusqc-autoupdater";
         public override Version RequiredExiledVersion { get; } = new Version(2, 3, 4);
-        public override Version Version { get; } = new Version(1, 0, 3);
+        public override Version Version { get; } = new Version(1, 0, 4);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
         public bool shouldSendDebug = true;
