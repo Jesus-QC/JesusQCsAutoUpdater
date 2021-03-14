@@ -4,6 +4,7 @@ using Exiled.API.Interfaces;
 using Exiled.Loader;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 
@@ -38,7 +39,6 @@ namespace JesusQCsAutoUpdater
                         latest_version = pluginInfo.latest_version,
                         id = pluginInfo.id
                     };
-                    Log.Info(file.file_name + "." + file.file_extension + " - added + " + pluginInfo.latest_version);
                     FinalPluginList.Add(newPlugin);
                 }
             }
@@ -121,22 +121,28 @@ namespace JesusQCsAutoUpdater
 
         public PluginList GetPluginListByURL(string url)
         {
-            using (var client = new WebClient())
-            {
-                string response = client.DownloadString(url);
-                PluginList deserializedClass = Utf8Json.JsonSerializer.Deserialize<PluginList>(response);
-                return deserializedClass;
-            }
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+            var webResponse = request.GetResponse();
+            var webStream = webResponse.GetResponseStream();
+            var responseReader = new StreamReader(webStream);
+            var response = responseReader.ReadToEnd();
+            PluginList deserializedClass = Utf8Json.JsonSerializer.Deserialize<PluginList>(response);
+            responseReader.Close();
+            return deserializedClass;
         }
 
         public FinalPluginInfo GetLastestVersionByID(int id)
         {
-            using (var client = new WebClient())
-            {
-                string response = client.DownloadString(new Uri("https://plugins.exiled.host/api/plugins/" + id));
-                FinalPluginInfo deserializedClass = Utf8Json.JsonSerializer.Deserialize<FinalPluginInfo>(response);
-                return deserializedClass;
-            }
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://plugins.exiled.host/api/plugins/" + id);
+            request.Method = "GET";
+            var webResponse = request.GetResponse();
+            var webStream = webResponse.GetResponseStream();
+            var responseReader = new StreamReader(webStream);
+            var response = responseReader.ReadToEnd();
+            FinalPluginInfo deserializedClass = Utf8Json.JsonSerializer.Deserialize<FinalPluginInfo>(response);
+            responseReader.Close();
+            return deserializedClass;
         }
 
         public class OnePlugin
