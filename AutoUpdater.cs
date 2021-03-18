@@ -16,7 +16,7 @@ namespace JesusQCsAutoUpdater
         public override string Author { get; } = "JesusQC";
         public override string Prefix { get; } = "jesusqc-autoupdater";
         public override Version RequiredExiledVersion { get; } = new Version(2, 3, 4);
-        public override Version Version { get; } = new Version(1, 0, 4);
+        public override Version Version { get; } = new Version(1, 0, 5);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
         public bool shouldSendDebug = true;
@@ -43,7 +43,7 @@ namespace JesusQCsAutoUpdater
                 }
             }
 
-            MEC.Timing.CallDelayed(3, () => 
+            MEC.Timing.CallDelayed(3.0f, () => 
             { 
                 Log.Info
                 (@"
@@ -70,7 +70,7 @@ namespace JesusQCsAutoUpdater
                 {
                     if (plugin.Name.Contains("Exiled.") || Config.pluginBlacklist.Contains(plugin.Prefix))
                     {
-                        Log.Debug(plugin.Name + " is autoupdated, skipping it", shouldSendDebug);
+                        Log.Debug(plugin.Name + " is autoupdated / blacklisted, skipping it", shouldSendDebug);
                         updatedplugins++;
                     }
                     else
@@ -87,7 +87,7 @@ namespace JesusQCsAutoUpdater
             }
         }
 
-        public void CheckVersion(IPlugin<IConfig> plugin)
+        private void CheckVersion(IPlugin<IConfig> plugin)
         {
             Log.Debug("Checking the version of " + plugin.Name, shouldSendDebug);
 
@@ -96,12 +96,24 @@ namespace JesusQCsAutoUpdater
                 if (plugin.Version < new Version(pluginInfo.latest_version))
                 {
                     Log.Warn(plugin.Name + " [" + plugin.Version + "] is outdated. Latest version: [" + pluginInfo.latest_version + "]. Updating it...");
-                    using (var client = new WebClient())
+                    try
                     {
-                        System.IO.File.Delete(plugin.GetPath());
-                        client.DownloadFile(GetLastestVersionByID(pluginInfo.id).success.latest_download_link, plugin.GetPath());
+                        System.IO.File.Copy(plugin.GetPath(), plugin.GetPath() + "-backup"); // Creating a backup
+                        
+                        using (var client = new WebClient())
+                        {
+                            client.DownloadFile(GetLastestVersionByID(pluginInfo.id).success.latest_download_link, plugin.GetPath()); 
+                        }
                         Log.Info(plugin.Name + " was updated successfully!");
+                        
+                        System.IO.File.Delete(plugin.GetPath() + "-backup"); // Removing the backup
                     }
+                    catch (Exception e)
+                    {
+                        System.IO.File.Copy(plugin.GetPath() + "-backup", plugin.GetPath()); // Restoring the backup
+                        Log.Error("There was an error updating the plugin " + plugin.Name + " " + e);
+                    }
+                    
                 }
                 else if (plugin.Version >= new Version(pluginInfo.latest_version))
                 {
@@ -111,7 +123,7 @@ namespace JesusQCsAutoUpdater
             }
         }
 
-        public void AllPluginsUpdated()
+        private void AllPluginsUpdated()
         {
             if (updatedplugins == Loader.Plugins.Count)
             {
