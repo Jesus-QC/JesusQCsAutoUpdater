@@ -101,6 +101,7 @@ namespace JesusQCsAutoUpdater
                         try
                         {
                             System.IO.File.Copy(plugin.GetPath(), $"{plugin.GetPath()}-backup"); // Creating a backup
+                            
                             System.IO.File.Delete(plugin.GetPath());
                             using (var client = new WebClient())
                             {
