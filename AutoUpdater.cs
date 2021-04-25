@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
+using UnityEngine;
 
 namespace JesusQCsAutoUpdater
 {
@@ -19,29 +21,14 @@ namespace JesusQCsAutoUpdater
         public override Version Version { get; } = new Version(1, 0, 5, 2);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
-        public bool shouldSendDebug = true;
-        public int updatedplugins = 0;
-        public List<OnePlugin> FinalPluginList = new List<OnePlugin>();
+        public bool shouldSendDebug;
+        public int updatedplugins;
+        public List<LPlugin> LPluginList = new List<LPlugin>();
 
         public override void OnEnabled()
         {
             shouldSendDebug = Config.IsDebugEnabled;
             updatedplugins = 0;
-
-            PluginList ApiPluginList = GetPluginListByURL($"http://plugins.exiled.host/api/plugins?apikey={Config.ApiKey}");
-            foreach (ApiPluginInfo pluginInfo in ApiPluginList.success)
-            {
-                foreach (File file in pluginInfo.files)
-                {
-                    OnePlugin newPlugin = new OnePlugin
-                    {
-                        name = file.file_name,
-                        latest_version = pluginInfo.latest_version,
-                        id = pluginInfo.id
-                    };
-                    FinalPluginList.Add(newPlugin);
-                }
-            }
 
             MEC.Timing.CallDelayed(3.0f, () => 
             { 
@@ -52,21 +39,20 @@ namespace JesusQCsAutoUpdater
                    |+ ;|  Searching for updates...
                    `---'");
                 CheckForUpdates(); 
+                
+                if(Config.ApiKey == "00000000000000000000000000000000")
+                    Log.Error("Invalid api key");
             });
-
+            
             base.OnEnabled();
         }
 
-        public override void OnDisabled()
+        private void CheckForUpdates()
         {
-            base.OnDisabled();
-        }
-
-        public void CheckForUpdates()
-        {
+            LPluginList = GetPluginListByURL($"http://plugins.exiled.host/api/plugins?apikey={Config.ApiKey}").success;
             try
             {
-                foreach (IPlugin<IConfig> plugin in Loader.Plugins)
+                foreach (var plugin in Loader.Plugins)
                 {
                     if (plugin.Name.Contains("Exiled.") || Config.pluginBlacklist.Contains(plugin.Prefix))
                     {
@@ -92,7 +78,7 @@ namespace JesusQCsAutoUpdater
             Log.Debug($"Checking the version of {plugin.Name}...", shouldSendDebug);
             try
             {
-                foreach (OnePlugin pluginInfo in FinalPluginList.Where(p => p.name == plugin.Assembly.GetName().Name))
+                foreach (LPlugin pluginInfo in LPluginList.Where(p => p.name == plugin.Assembly.GetName().Name))
                 {
                     if (plugin.Version < new Version(pluginInfo.latest_version))
                     {
@@ -100,20 +86,20 @@ namespace JesusQCsAutoUpdater
                             $"{plugin.Name} [{plugin.Version}] is outdated. Latest version: [{pluginInfo.latest_version}]. Updating it...");
                         try
                         {
-                            System.IO.File.Copy(plugin.GetPath(), $"{plugin.GetPath()}-backup"); // Creating a backup
+                            File.Copy(plugin.GetPath(), $"{plugin.GetPath()}.bak");
                             
-                            System.IO.File.Delete(plugin.GetPath());
+                            File.Delete(plugin.GetPath());
                             using (var client = new WebClient())
                             {
-                                client.DownloadFile(GetLastestVersionURLByID(pluginInfo.id), plugin.GetPath()); 
+                                client.DownloadFile($"https://plugins.exiled.host/plugin/{pluginInfo.id}/download/{pluginInfo.latest_file_id}", plugin.GetPath()); 
                             }
                             Log.Info($"{plugin.Name} was updated successfully!");
                         
-                            System.IO.File.Delete($"{plugin.GetPath()}-backup"); // Removing the backup
+                            File.Delete($"{plugin.GetPath()}.bak");
                         }
                         catch (Exception e)
                         {
-                            System.IO.File.Copy($"{plugin.GetPath()}-backup", plugin.GetPath()); // Restoring the backup
+                            File.Copy($"{plugin.GetPath()}.bak", plugin.GetPath());
                             Log.Error($"There was an error updating the plugin {plugin.Name} {e}");
                         }
                     
@@ -154,52 +140,17 @@ namespace JesusQCsAutoUpdater
             return deserializedClass;
         }
 
-        public string GetLastestVersionURLByID(int id)
+        public class LPlugin
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"https://plugins.exiled.host/api/plugins/{id}");
-            request.Method = "GET";
-            var webResponse = request.GetResponse();
-            var webStream = webResponse.GetResponseStream();
-            var responseReader = new StreamReader(webStream);
-            var response = responseReader.ReadToEnd();
-            FinalPluginInfo deserializedClass = Utf8Json.JsonSerializer.Deserialize<FinalPluginInfo>(response);
-            responseReader.Close();
-            return deserializedClass.success.latest_download_link;
+            public int id { get; set; }
+            public string name { get; set; }
+            public int latest_file_id { get; set; }
+            public string latest_version { get; set; }
         }
 
-        // This is the json object that contains the information of the updated plugin.
-        public class FinalPluginInfo
-        {
-            public Success success { get; set; }
-        }
-
-        public class Success
-        {
-            public string latest_download_link { get; set; }
-        }
-
-        // This is the json object that contains the information needed of each plugin that is in the api.
         public class PluginList
         {
-            public List<ApiPluginInfo> success { get; set; }
-        }
-        public class ApiPluginInfo
-        {
-            public int id { get; set; }
-            public string latest_version { get; set; }
-            public List<File> files { get; set; }
-        }
-        public class File
-        {
-            public string file_name { get; set; }
-        }
-        
-        // This is an object to save the data of an individual plugin with its latest version
-        public class OnePlugin
-        {
-            public string name { get; set; }
-            public string latest_version { get; set; }
-            public int id { get; set; }
+            public List<LPlugin> success { get; set; }
         }
     }
 }
