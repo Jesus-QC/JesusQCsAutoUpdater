@@ -18,7 +18,7 @@ namespace JesusQCsAutoUpdater
         public override string Author { get; } = "JesusQC";
         public override string Prefix { get; } = "jesusqc-autoupdater";
         public override Version RequiredExiledVersion { get; } = new Version(2, 3, 4);
-        public override Version Version { get; } = new Version(1, 0, 5, 2);
+        public override Version Version { get; } = new Version(2, 0, 0);
         public override PluginPriority Priority => PluginPriority.Lowest;
 
         public bool shouldSendDebug;
